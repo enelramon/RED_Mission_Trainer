@@ -1,0 +1,89 @@
+{
+  "sistemas": {
+    "energia": {
+      "nombre": "Energy",
+      "consumo_turno": { "normal": -8, "mejorado": -3 },
+      "tecnologia": {
+        "normal": {
+          "nombre": "Basic Solar Array & Batteries",
+          "dato": "Standard photovoltaic solar panels vulnerable to dust accumulation and global storms.",
+          "fuente": "NASA InSight / Opportunity"
+        },
+        "mejorado": {
+          "nombre": "Kilopower Nuclear Fission Reactor (40 kW)",
+          "dato": "40 kW space nuclear fission reactor unaffected by dust storms or Martian day/night cycles.",
+          "fuente": "NASA STMD Kilopower Project"
+        }
+      }
+    },
+    "aire": {
+      "nombre": "Oxygen",
+      "consumo_turno": { "normal": -8, "mejorado": -4 },
+      "tecnologia": {
+        "normal": {
+          "nombre": "Standard Cabin Sensors & Filters",
+          "dato": "Standard ISS-style life support system (recovering ~50% of oxygen).",
+          "fuente": "NASA ECLSS Architecture"
+        },
+        "mejorado": {
+          "nombre": "MOXIE Technology (In-Situ O₂ Extraction)",
+          "dato": "Extracts breathable O₂ from Martian atmospheric CO₂ at ~798 °C via solid oxide electrolysis.",
+          "fuente": "NASA Perseverance MOXIE"
+        }
+      }
+    },
+    "agua": {
+      "nombre": "Water",
+      "consumo_turno": { "normal": -7, "mejorado": -2 },
+      "tecnologia": {
+        "normal": {
+          "nombre": "Standard ECLSS Water System (~93% Recovery)",
+          "dato": "Conventional wastewater distillation losing unrecovered brine (93-94% loop closure).",
+          "fuente": "NASA ISS ECLSS"
+        },
+        "mejorado": {
+          "nombre": "Brine Processor Assembly (98% Recovery)",
+          "dato": "Advanced brine processor tested on the ISS in 2023 achieving 98% total water recovery.",
+          "fuente": "NASA Exploration ECLSS (2023)"
+        }
+      }
+    },
+    "alimentos": {
+      "nombre": "Food",
+      "consumo_turno": { "normal": -8, "mejorado": -5 },
+      "tecnologia": {
+        "normal": {
+          "nombre": "Prepackaged Dry Rations",
+          "dato": "Long-duration shelf-stable freeze-dried rations; prone to crew menu fatigue.",
+          "fuente": "NASA Human Research Program"
+        },
+        "mejorado": {
+          "nombre": "LED Hydroponic Growth Chambers (Veggie/APH)",
+          "dato": "Enclosed hydroponic LED growth chamber providing fresh salad crops and vital micronutrients.",
+          "fuente": "NASA Veggie & Advanced Plant Habitat"
+        }
+      }
+    },
+    "proteccion": {
+      "nombre": "Shielding",
+      "consumo_turno": { "normal": -8, "mejorado": -3 },
+      "tecnologia": {
+        "normal": {
+          "nombre": "Standard Rigid Habitat Shell",
+          "dato": "Lightweight hull structure exposed to average galactic cosmic radiation of ~0.64 mSv/day.",
+          "fuente": "NASA Curiosity RAD"
+        },
+        "mejorado": {
+          "nombre": "Passive Regolith, Water & Polyethylene Shield",
+          "dato": "1.5 to 2 m thick composite passive barrier protecting against GCRs and solar particle storms.",
+          "fuente": "NASA Mars Architecture Study"
+        }
+      }
+    },
+    "animo": {
+      "nombre": "Crew Morale",
+      "oculto": true,
+      "consumo_turno": { "normal": -3 }
+    }
+  }
+}

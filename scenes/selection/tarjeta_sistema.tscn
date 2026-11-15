@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://cpqh0prwcy4wr"]
+
+[ext_resource type="Script" uid="uid://c617ltmvv3fve" path="res://scenes/selection/tarjeta_sistema.gd" id="1_oksw2"]
+
+[node name="TarjetaSistema" type="Button" unique_id=1084676709]
+custom_minimum_size = Vector2(200, 140)
+offset_right = 8.0
+offset_bottom = 8.0
+script = ExtResource("1_oksw2")

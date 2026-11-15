@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://dkfayyfkji30d"]
+
+[ext_resource type="Script" uid="uid://ba6fhaua1bprx" path="res://scenes/selection/selection_screen.gd" id="1_w3g8m"]
+[ext_resource type="PackedScene" uid="uid://cpqh0prwcy4wr" path="res://scenes/selection/tarjeta_sistema.tscn" id="2_6qc3d"]
+[ext_resource type="Texture2D" uid="uid://be1sjnu8m4yht" path="res://art/fondo de inicio nasa.png" id="2_83mou"]
+
+[node name="SelectionScreen" type="Control" unique_id=936449110]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_w3g8m")
+
+[node name="Fondo" type="TextureRect" parent="." unique_id=185768946]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_83mou")
+
+[node name="Margen" type="MarginContainer" parent="." unique_id=1974142354]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Caja" type="VBoxContainer" parent="Margen" unique_id=764097209]
+layout_mode = 2
+theme_override_constants/separation = 34
+
+[node name="Titulo" type="Label" parent="Margen/Caja" unique_id=2037954172]
+layout_mode = 2
+text = "Select 2 systems to upgrade"
+
+[node name="Contador" type="Label" parent="Margen/Caja" unique_id=530565614]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Tarjetas" type="HBoxContainer" parent="Margen/Caja" unique_id=938847252]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="TarjetaEnergia" parent="Margen/Caja/Tarjetas" unique_id=1084676709 instance=ExtResource("2_6qc3d")]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="TarjetaAire" parent="Margen/Caja/Tarjetas" unique_id=957438154 instance=ExtResource("2_6qc3d")]
+layout_mode = 2
+sistema_id = "aire"
+
+[node name="TarjetaAgua" parent="Margen/Caja/Tarjetas" unique_id=1670953531 instance=ExtResource("2_6qc3d")]
+layout_mode = 2
+sistema_id = "agua"
+
+[node name="TarjetaAlimentos" parent="Margen/Caja/Tarjetas" unique_id=1964211076 instance=ExtResource("2_6qc3d")]
+layout_mode = 2
+sistema_id = "alimentos"
+
+[node name="TarjetaProteccion" parent="Margen/Caja/Tarjetas" unique_id=2098291532 instance=ExtResource("2_6qc3d")]
+layout_mode = 2
+sistema_id = "proteccion"
+
+[node name="Descripcion" type="RichTextLabel" parent="Margen/Caja" unique_id=861581715]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+bbcode_enabled = true
+
+[node name="BotonDespegar" type="Button" parent="Margen/Caja" unique_id=615301725]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 64)
+layout_mode = 2
+text = "LAUNCH"

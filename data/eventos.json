@@ -1,0 +1,173 @@
+{
+  "eventos": [
+	{
+	  "id": "tormenta_polvo",
+	  "nombre": "Global Dust Storm",
+	  "sistema": "energia",
+	  "positivo": false,
+	  "suave": false,
+	  "estacion": "energia",
+	  "minijuego": "cables",
+	  "aviso": "Alert: A planet-encircling dust storm is approaching. In 2018, one grew to cover all of Mars in three weeks.",
+	  "dato": "Atmospheric dust blocks sunlight. In NASA studies at Jezero Crater, solar power dropped from ~34 kW to ~11 kW during major dust storms.",
+	  "efectos": {
+		"energia": { "normal": -30, "mejorado": -5 },
+		"aire": { "normal": -8, "mejorado": -2 }
+	  },
+	  "que_habria_pasado": {
+		"normal": "Your solar panels would have lost nearly two-thirds of their electrical output.",
+		"mejorado": "Your Kilopower nuclear reactor maintained full output, completely independent of sunlight."
+	  }
+	},
+	{
+	  "id": "tormenta_solar",
+	  "nombre": "Solar Particle Storm",
+	  "sistema": "proteccion",
+	  "positivo": false,
+	  "suave": false,
+	  "estacion": "proteccion",
+	  "minijuego": "secuencia",
+	  "aviso": "Orbital alert: Coronal mass ejection arriving. Immediate action required: activate storm shelter shielding.",
+	  "dato": "In September 2017, a severe solar storm doubled Martian surface radiation levels for two days. Mars lacks a global intrinsic magnetic field for protection.",
+	  "efectos": {
+		"proteccion": { "normal": -30, "mejorado": -8 }
+	  },
+	  "que_habria_pasado": {
+		"normal": "A standard habitat shell would have allowed dangerous ionizing radiation to penetrate.",
+		"mejorado": "Your composite regolith and water shielding effectively attenuated the vast majority of incoming radiation."
+	  }
+	},
+	{
+	  "id": "viento_limpiador",
+	  "nombre": "Cleaning Wind Event",
+	  "sistema": "energia",
+	  "positivo": true,
+	  "suave": true,
+	  "estacion": "",
+	  "minijuego": "ninguno",
+	  "aviso": "",
+	  "dato": "",
+	  "variantes": {
+		"normal": {
+		  "aviso": "Good news: Surface gusts are scouring dust deposits off your solar panel arrays.",
+		  "dato": "Martian winds periodically cleaned the solar panels of rovers Spirit and Opportunity, boosting power by up to 10% and extending their missions by years.",
+		  "efectos": { "energia": { "normal": 10 } }
+		},
+		"mejorado": {
+		  "aviso": "High winds detected outside, but your nuclear reactor operates undisturbed.",
+		  "dato": "Solar arrays depend on wind gusts for passive cleaning. A nuclear reactor operates continuously regardless of weather.",
+		  "efectos": {}
+		}
+	  },
+	  "que_habria_pasado": {
+		"normal": "Atmospheric winds cleaned your solar panels, granting a temporary energy surplus.",
+		"mejorado": "With your nuclear reactor operational, surface winds had no effect on power output."
+	  }
+	},
+	{
+	  "id": "apagon_comunicaciones",
+	  "nombre": "Solar Conjunction Blackout",
+	  "sistema": "alimentos",
+	  "positivo": false,
+	  "suave": true,
+	  "estacion": "",
+	  "minijuego": "ninguno",
+	  "aviso": "The Sun is positioned between Mars and Earth. All direct interplanetary communications are severed.",
+	  "dato": "Solar conjunction occurs every 26 months and lasts approximately two weeks. During this blackout, the Martian crew must operate fully autonomously.",
+	  "efectos": {
+		"animo": { "normal": -12, "mejorado": -4, "segun": "alimentos" }
+	  },
+	  "que_habria_pasado": {
+		"normal": "Without fresh crops, complete isolation from Earth severely impacted crew morale.",
+		"mejorado": "Tending fresh hydroponic crops provided therapeutic sensory stimulation, preserving crew morale."
+	  }
+	},
+	{
+	  "id": "moho_o_menu",
+	  "nombre": "Crop Mold or Menu Fatigue",
+	  "sistema": "alimentos",
+	  "positivo": false,
+	  "suave": true,
+	  "estacion": "alimentos",
+	  "minijuego": "ninguno",
+	  "aviso": "",
+	  "dato": "",
+	  "variantes": {
+		"normal": {
+		  "nombre": "Crew Menu Fatigue",
+		  "minijuego": "ninguno",
+		  "aviso": "After consecutive sols of identical prepackaged rations, crew appetite and morale are declining.",
+		  "dato": "On long-duration space missions, repetitive diets induce psychological appetite fatigue. NASA grows fresh salad crops on the ISS partly to mitigate this.",
+		  "efectos": { "animo": { "normal": -8 } }
+		},
+		"mejorado": {
+		  "nombre": "Crop Chamber Fungal Mold",
+		  "minijuego": "barra_zona",
+		  "aviso": "Alert in growth chambers: Fungal mold detected on hydroponic plant leaves.",
+		  "dato": "In 2016, zinnia plants on the ISS suffered fungal mold from excess humidity. Forced fan ventilation dried them out rapidly: solving one microgravity hazard can trigger another.",
+		  "efectos": { "alimentos": { "mejorado": -20 }, "animo": { "normal": -5 } }
+		}
+	  },
+	  "que_habria_pasado": {
+		"normal": "Relying exclusively on shelf-stable rations led to psychological menu fatigue.",
+		"mejorado": "Hydroponic farming required precise humidity and airflow balancing to prevent crop blight."
+	  }
+	},
+	{
+	  "id": "reciclador_obstruido",
+	  "nombre": "Clogged Water Recycler",
+	  "sistema": "agua",
+	  "positivo": false,
+	  "suave": true,
+	  "estacion": "agua",
+	  "minijuego": "barra_zona",
+	  "aviso": "Warning: Mineral precipitation is obstructing the primary water reclamation loop.",
+	  "dato": "Urine processors aboard the ISS are limited by calcium sulfate precipitation. Adding a dedicated Brine Processor Assembly pushes total closed-loop recovery to 98%.",
+	  "efectos": {
+		"agua": { "normal": -25, "mejorado": -8 }
+	  },
+	  "que_habria_pasado": {
+		"normal": "Operating at standard 93-94% recovery resulted in substantial water inventory depletion.",
+		"mejorado": "With your 98% brine processor active, water loss was minimal and quickly stabilized."
+	  }
+	},
+	{
+	  "id": "alarma_co2",
+	  "nombre": "CO₂ Scrubber Malfunction",
+	  "sistema": "aire",
+	  "positivo": false,
+	  "suave": true,
+	  "estacion": "aire",
+	  "minijuego": "secuencia",
+	  "aviso": "Critical: Carbon dioxide concentrations are rising inside the pressurized habitat.",
+	  "dato": "On the ISS, amine scrubbers remove CO₂, an oxygen generator electrolyzes water, and a Sabatier reactor recycles CO₂ with H₂ to recover ~50% of oxygen.",
+	  "efectos": {
+		"aire": { "normal": -20, "mejorado": -8 },
+		"energia": { "normal": 0, "mejorado": -5, "segun": "aire" }
+	  },
+	  "que_habria_pasado": {
+		"normal": "A standard ISS-style ECLSS would have suffered steep oxygen depletion.",
+		"mejorado": "Your advanced MOXIE system compensated reliably, drawing a small auxiliary energy surge."
+	  }
+	},
+	{
+	  "id": "polvo_habitat",
+	  "nombre": "Habitat Regolith Intrusion",
+	  "sistema": "proteccion",
+	  "positivo": false,
+	  "suave": false,
+	  "estacion": "proteccion",
+	  "minijuego": "cables",
+	  "aviso": "Fine abrasive regolith dust breached the airlock seal during EVA ingress. Decontaminate immediately.",
+	  "dato": "Martian soil contains 0.5% to 1.0% toxic perchlorate salts hazardous to human thyroid function, along with microscopic abrasive basalt particles.",
+	  "efectos": {
+		"proteccion": { "normal": -15, "mejorado": -5 },
+		"aire": { "normal": -5, "mejorado": -5 }
+	  },
+	  "que_habria_pasado": {
+		"normal": "A basic airlock seal allowed abrasive toxic dust to penetrate deeper into living quarters.",
+		"mejorado": "Your multi-stage decontamination airlock effectively confined and purged the particulate breach."
+	  }
+	}
+  ]
+}

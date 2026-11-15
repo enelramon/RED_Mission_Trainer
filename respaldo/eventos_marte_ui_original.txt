@@ -1,0 +1,471 @@
+extends Control
+
+# Tipos de eventos / minijuegos
+enum Evento {
+	NINGUNO,
+	TORNADO_RANDOM_KEY,      # 1. Tornado que arrastra -> Presionar botón random (PUSH RANDOM KEY)
+	TORMENTA_BARRA,          # 2. Tormenta de polvo solar -> Mover la barra (HIT AREA - BAR)
+	ERUPCION_CIRCULO,        # 3. Alarma de erupción solar -> Mantener el círculo (HIT AREA - CIRCLE)
+	POLVO_ESPACIO            # 4. Polvo marciano -> Mantener presionado Espacio (SMASH BUTTON / Space)
+}
+
+var jugador: CharacterBody2D = null
+var evento_actual: int = Evento.NINGUNO
+
+# Temporizador para eventos automáticos y mensaje de "Success!!!"
+var tiempo_siguiente_evento: float = 12.0
+var tiempo_mensaje_exito: float = 0.0
+var texto_resultado: String = ""
+var color_resultado: Color = Color.WHITE
+
+# Variables generales del evento activo
+var tiempo_restante: float = 0.0
+var tiempo_maximo: float = 6.0
+var progreso_exito: float = 0.0 # 0.0 a 1.0
+
+# 1. Variables PUSH RANDOM KEY (Tornado)
+const TECLAS_DISPONIBLES = [
+	{"key": KEY_Q, "label": "Q"},
+	{"key": KEY_E, "label": "E"},
+	{"key": KEY_R, "label": "R"},
+	{"key": KEY_F, "label": "F"},
+	{"key": KEY_Z, "label": "Z"},
+	{"key": KEY_X, "label": "X"},
+	{"key": KEY_C, "label": "C"},
+	{"key": KEY_V, "label": "V"}
+]
+var tecla_objetivo: Dictionary = {"key": KEY_E, "label": "E"}
+var nodo_tornado: Node2D = null
+var cooldown_tornado: float = 3.0
+
+# 2. Variables HIT AREA - BAR (Tormenta de polvo solar)
+var barra_jugador_pos: float = 0.5     # 0.0 a 1.0
+var barra_zona_pos: float = 0.5        # 0.0 a 1.0
+var barra_zona_ancho: float = 0.30
+var barra_zona_vel: float = 0.35
+
+# 3. Variables HIT AREA - CIRCLE (Alarma de erupción solar)
+var circulo_jugador_ang: float = -PI / 2.0
+var circulo_zona_ang: float = -0.3
+var circulo_zona_ancho: float = 1.05   # En radianes
+var circulo_zona_vel: float = 1.0
+
+# 4. Variables SMASH / HOLD SPACE (Polvo marciano)
+var espacio_presionado: bool = false
+
+# Partículas visuales para el clima
+var particulas_clima: Array[Vector2] = []
+
+func _ready() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_PASS
+	for i in range(40):
+		particulas_clima.append(Vector2(randf() * 1280.0, randf() * 720.0))
+	crear_botones_prueba()
+	preparar_tornado_en_mapa()
+
+func crear_botones_prueba() -> void:
+	var hbox: HBoxContainer = HBoxContainer.new()
+	hbox.position = Vector2(16, 14)
+	hbox.add_theme_constant_override("separation", 8)
+	add_child(hbox)
+
+	var configs: Array = [
+		{"texto": "1: Tornado (Random Key)", "ev": Evento.TORNADO_RANDOM_KEY},
+		{"texto": "2: Polvo Solar (Barra)", "ev": Evento.TORMENTA_BARRA},
+		{"texto": "3: Erupción Solar (Círculo)", "ev": Evento.ERUPCION_CIRCULO},
+		{"texto": "4: Polvo Marciano (Espacio)", "ev": Evento.POLVO_ESPACIO}
+	]
+
+	for cfg in configs:
+		var btn: Button = Button.new()
+		btn.text = String(cfg["texto"])
+		btn.focus_mode = Control.FOCUS_NONE
+		var ev_tipo: int = int(cfg["ev"])
+		btn.pressed.connect(func(): iniciar_evento(ev_tipo))
+		hbox.add_child(btn)
+
+func preparar_tornado_en_mapa() -> void:
+	if jugador == null or jugador.get_parent() == null:
+		return
+	var escena: Node = jugador.get_parent()
+	if escena.has_node("tornado m"):
+		nodo_tornado = escena.get_node("tornado m")
+		return
+	if escena.has_node("caminito tornadito"):
+		nodo_tornado = escena.get_node("caminito tornadito")
+		return
+
+func obtener_pos_jugador() -> Vector2:
+	if jugador == null:
+		return Vector2.ZERO
+	if jugador.has_method("obtener_posicion_visual"):
+		return jugador.obtener_posicion_visual()
+	return jugador.global_position
+
+func obtener_pos_tornado() -> Vector2:
+	if nodo_tornado == null or not is_instance_valid(nodo_tornado):
+		if jugador != null and jugador.get_parent() != null and jugador.get_parent().has_node("tornado m"):
+			nodo_tornado = jugador.get_parent().get_node("tornado m")
+	if nodo_tornado != null and is_instance_valid(nodo_tornado):
+		if nodo_tornado.has_method("obtener_posicion_visual"):
+			return nodo_tornado.obtener_posicion_visual()
+		if nodo_tornado.has_node("tornado"):
+			var spr: Node2D = nodo_tornado.get_node("tornado")
+			if spr != null:
+				return spr.global_position
+		return nodo_tornado.global_position
+	return obtener_pos_jugador()
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	var key_event: InputEventKey = event as InputEventKey
+
+	# Teclas rápidas 1, 2, 3, 4 para probar cualquier evento cuando quieras
+	if key_event.keycode == KEY_1:
+		iniciar_evento(Evento.TORNADO_RANDOM_KEY)
+		return
+	elif key_event.keycode == KEY_2:
+		iniciar_evento(Evento.TORMENTA_BARRA)
+		return
+	elif key_event.keycode == KEY_3:
+		iniciar_evento(Evento.ERUPCION_CIRCULO)
+		return
+	elif key_event.keycode == KEY_4:
+		iniciar_evento(Evento.POLVO_ESPACIO)
+		return
+
+	# Lógica del Evento 1: PUSH RANDOM KEY (Tornado)
+	# Presiona la tecla random mostrada en pantalla para salir del tornado
+	if evento_actual == Evento.TORNADO_RANDOM_KEY:
+		var codigo_esperado: int = int(tecla_objetivo["key"])
+		if key_event.keycode == codigo_esperado or key_event.physical_keycode == codigo_esperado:
+			completar_evento_con_exito()
+		queue_redraw()
+
+func iniciar_evento(nuevo_evento: int) -> void:
+	evento_actual = nuevo_evento
+	progreso_exito = 0.0
+	tiempo_mensaje_exito = 0.0
+
+	match nuevo_evento:
+		Evento.TORNADO_RANDOM_KEY:
+			tiempo_maximo = 5.0
+			tiempo_restante = tiempo_maximo
+			elegir_nueva_tecla_random()
+			if nodo_tornado != null and is_instance_valid(nodo_tornado):
+				if nodo_tornado.has_method("activar_tornado") and not bool(nodo_tornado.get("activo")):
+					nodo_tornado.activar_tornado()
+
+		Evento.TORMENTA_BARRA:
+			tiempo_maximo = 7.0
+			tiempo_restante = tiempo_maximo
+			barra_jugador_pos = 0.5
+			barra_zona_pos = 0.55
+			barra_zona_vel = 0.36
+
+		Evento.ERUPCION_CIRCULO:
+			tiempo_maximo = 7.0
+			tiempo_restante = tiempo_maximo
+			circulo_jugador_ang = -PI / 2.0
+			circulo_zona_ang = -PI / 2.0 + 0.35
+			circulo_zona_vel = 1.0
+
+		Evento.POLVO_ESPACIO:
+			tiempo_maximo = 6.0
+			tiempo_restante = tiempo_maximo
+			progreso_exito = 0.0
+
+	queue_redraw()
+
+func elegir_nueva_tecla_random() -> void:
+	var indice: int = randi() % TECLAS_DISPONIBLES.size()
+	tecla_objetivo = TECLAS_DISPONIBLES[indice]
+
+func _process(delta: float) -> void:
+	if cooldown_tornado > 0.0:
+		cooldown_tornado -= delta
+
+	if tiempo_mensaje_exito > 0.0:
+		tiempo_mensaje_exito -= delta
+		queue_redraw()
+
+	# Si no hay evento activo, contar para lanzar un evento climático automático
+	if evento_actual == Evento.NINGUNO:
+		tiempo_siguiente_evento -= delta
+		if tiempo_siguiente_evento <= 0.0:
+			var opciones: Array = [
+				Evento.TORMENTA_BARRA,
+				Evento.ERUPCION_CIRCULO,
+				Evento.POLVO_ESPACIO
+			]
+			var idx: int = randi() % opciones.size()
+			iniciar_evento(int(opciones[idx]))
+		return
+
+	# Actualizar temporizador del evento activo
+	tiempo_restante -= delta
+	if tiempo_restante <= 0.0:
+		fallar_evento()
+		return
+
+	match evento_actual:
+		Evento.TORNADO_RANDOM_KEY:
+			procesar_tornado(delta)
+		Evento.TORMENTA_BARRA:
+			procesar_tormenta_barra(delta)
+		Evento.ERUPCION_CIRCULO:
+			procesar_erupcion_circulo(delta)
+		Evento.POLVO_ESPACIO:
+			procesar_polvo_espacio(delta)
+
+	queue_redraw()
+
+func procesar_tornado(_delta: float) -> void:
+	if jugador == null:
+		return
+	var pos_jug: Vector2 = obtener_pos_jugador()
+	if nodo_tornado != null and is_instance_valid(nodo_tornado) and nodo_tornado.has_method("esta_en_nave"):
+		if nodo_tornado.esta_en_nave(pos_jug):
+			return
+	# El tornado arrastra suavemente al jugador mientras no presione la tecla random
+	var pos_tor: Vector2 = obtener_pos_tornado()
+	var diferencia: Vector2 = pos_tor - pos_jug
+	if diferencia.length() > 4.0 and diferencia.length() < 500.0:
+		jugador.velocity = diferencia * 3.0
+	else:
+		jugador.velocity = Vector2(80.0, -45.0)
+	jugador.move_and_slide()
+
+func procesar_tormenta_barra(delta: float) -> void:
+	# La zona naranja de la barra se mueve de lado a lado
+	barra_zona_pos += barra_zona_vel * delta
+	if barra_zona_pos > 0.82:
+		barra_zona_pos = 0.82
+		barra_zona_vel = -absf(barra_zona_vel)
+	elif barra_zona_pos < 0.18:
+		barra_zona_pos = 0.18
+		barra_zona_vel = absf(barra_zona_vel)
+
+	# El jugador mueve la bolita blanca con Izquierda/Derecha (A/D) o Flechas
+	var input_x: int = int(Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT)) - int(Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT))
+	if Input.is_key_pressed(KEY_SPACE):
+		input_x = 1
+	barra_jugador_pos = clampf(barra_jugador_pos + float(input_x) * 0.85 * delta, 0.06, 0.94)
+
+	# Comprobar si la bolita blanca está dentro del área naranja
+	var dentro: bool = absf(barra_jugador_pos - barra_zona_pos) <= (barra_zona_ancho * 0.5)
+	if dentro:
+		progreso_exito += delta / 2.2
+		tiempo_restante = minf(tiempo_maximo, tiempo_restante + delta * 0.5)
+		if progreso_exito >= 1.0:
+			completar_evento_con_exito()
+	else:
+		# Si no mantienes la barra, el viento te empuja
+		if jugador != null:
+			jugador.velocity = Vector2(140.0, -50.0)
+			jugador.move_and_slide()
+
+func procesar_erupcion_circulo(delta: float) -> void:
+	# El arco naranja se mueve alrededor del anillo
+	circulo_zona_ang += circulo_zona_vel * delta
+	if circulo_zona_ang > PI * 0.8:
+		circulo_zona_vel = -absf(circulo_zona_vel)
+	elif circulo_zona_ang < -PI * 0.8:
+		circulo_zona_vel = absf(circulo_zona_vel)
+
+	# El jugador mantiene el marcador blanco dentro del arco naranja
+	var control_dir: int = int(Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT)) - int(Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT))
+	if Input.is_key_pressed(KEY_SPACE) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		circulo_jugador_ang += 2.2 * delta
+	elif control_dir != 0:
+		circulo_jugador_ang += float(control_dir) * 2.4 * delta
+	else:
+		circulo_jugador_ang -= 1.3 * delta
+
+	var diff: float = absf(angle_difference(circulo_jugador_ang, circulo_zona_ang))
+	if diff <= circulo_zona_ancho * 0.5:
+		progreso_exito += delta / 2.2
+		tiempo_restante = minf(tiempo_maximo, tiempo_restante + delta * 0.55)
+		if progreso_exito >= 1.0:
+			completar_evento_con_exito()
+
+func procesar_polvo_espacio(delta: float) -> void:
+	espacio_presionado = Input.is_key_pressed(KEY_SPACE)
+	if espacio_presionado:
+		progreso_exito += delta / 1.8
+		tiempo_restante = minf(tiempo_maximo, tiempo_restante + delta * 0.7)
+		if progreso_exito >= 1.0:
+			completar_evento_con_exito()
+	else:
+		progreso_exito = maxf(0.0, progreso_exito - delta * 0.25)
+
+func completar_evento_con_exito() -> void:
+	var completado: int = evento_actual
+	evento_actual = Evento.NINGUNO
+	tiempo_siguiente_evento = randf_range(12.0, 18.0)
+	cooldown_tornado = 6.0
+	if completado == Evento.TORNADO_RANDOM_KEY and nodo_tornado != null and is_instance_valid(nodo_tornado):
+		if nodo_tornado.has_method("desactivar_tornado"):
+			nodo_tornado.desactivar_tornado()
+	texto_resultado = "Success!!!"
+	color_resultado = Color(0.3, 1.0, 0.4)
+	tiempo_mensaje_exito = 1.8
+	queue_redraw()
+
+func fallar_evento() -> void:
+	var fallado: int = evento_actual
+	evento_actual = Evento.NINGUNO
+	tiempo_siguiente_evento = randf_range(12.0, 18.0)
+	cooldown_tornado = 6.0
+	texto_resultado = "¡Fallaste!"
+	color_resultado = Color(1.0, 0.3, 0.3)
+	tiempo_mensaje_exito = 1.8
+
+	if jugador != null:
+		if jugador.has_method("recibir_dano"):
+			jugador.recibir_dano(25)
+		if fallado == Evento.TORMENTA_BARRA or fallado == Evento.TORNADO_RANDOM_KEY:
+			jugador.velocity = Vector2(240.0, -140.0)
+			jugador.move_and_slide()
+	queue_redraw()
+
+func _draw() -> void:
+	var vp: Vector2 = get_viewport_rect().size
+	var centro_ui: Vector2 = Vector2(vp.x * 0.5, vp.y * 0.28)
+	var font: Font = ThemeDB.fallback_font
+
+	if tiempo_mensaje_exito > 0.0 and evento_actual == Evento.NINGUNO:
+		draw_string_outline(font, centro_ui + Vector2(-85, 0), texto_resultado, HORIZONTAL_ALIGNMENT_CENTER, 180, 34, 6, Color.BLACK)
+		draw_string(font, centro_ui + Vector2(-85, 0), texto_resultado, HORIZONTAL_ALIGNMENT_CENTER, 180, 34, color_resultado)
+		return
+
+	if evento_actual == Evento.NINGUNO:
+		return
+
+	dibujar_efecto_ambiental(vp)
+
+	match evento_actual:
+		Evento.TORNADO_RANDOM_KEY:
+			dibujar_ui_random_key(centro_ui, font)
+		Evento.TORMENTA_BARRA:
+			dibujar_ui_barra(centro_ui, font)
+		Evento.ERUPCION_CIRCULO:
+			dibujar_ui_circulo(centro_ui, font)
+		Evento.POLVO_ESPACIO:
+			dibujar_ui_boton_espacio(centro_ui, font)
+
+func dibujar_efecto_ambiental(vp: Vector2) -> void:
+	match evento_actual:
+		Evento.TORMENTA_BARRA:
+			draw_rect(Rect2(Vector2.ZERO, vp), Color(1.0, 0.55, 0.1, 0.16), true)
+			for i in range(particulas_clima.size()):
+				particulas_clima[i].x = fmod(particulas_clima[i].x + 14.0, vp.x)
+				draw_line(particulas_clima[i], particulas_clima[i] + Vector2(28, -4), Color(1.0, 0.75, 0.2, 0.55), 3.0)
+		Evento.ERUPCION_CIRCULO:
+			var pulso: float = 0.12 + 0.12 * absf(sin(float(Time.get_ticks_msec()) * 0.008))
+			draw_rect(Rect2(Vector2.ZERO, vp), Color(1.0, 0.15, 0.05, pulso), true)
+		Evento.POLVO_ESPACIO:
+			draw_rect(Rect2(Vector2.ZERO, vp), Color(0.75, 0.28, 0.12, 0.28), true)
+
+func dibujar_ui_random_key(centro: Vector2, font: Font) -> void:
+	# 1. PUSH RANDOM KEY
+	var titulo: String = "PUSH RANDOM KEY"
+	draw_string_outline(font, centro + Vector2(-180, -85), titulo, HORIZONTAL_ALIGNMENT_CENTER, 360, 22, 5, Color.BLACK)
+	draw_string(font, centro + Vector2(-180, -85), titulo, HORIZONTAL_ALIGNMENT_CENTER, 360, 22, Color.WHITE)
+
+	var radio: float = 58.0
+	draw_arc(centro, radio, 0.0, TAU, 64, Color(0.85, 0.85, 0.85), 14.0, true)
+	var ratio_tiempo: float = clampf(tiempo_restante / tiempo_maximo, 0.0, 1.0)
+	draw_arc(centro, radio, -PI / 2.0, -PI / 2.0 + TAU * ratio_tiempo, 64, Color(0.95, 0.08, 0.08), 14.0, true)
+
+	var tam_caja: Vector2 = Vector2(54, 54)
+	var rect_caja: Rect2 = Rect2(centro - tam_caja * 0.5, tam_caja)
+	draw_rect(rect_caja, Color(0.38, 0.38, 0.38), true)
+	draw_rect(rect_caja, Color(0.12, 0.12, 0.12), false, 3.0)
+
+	var letra: String = String(tecla_objetivo["label"])
+	draw_string_outline(font, centro + Vector2(-27, 11), letra, HORIZONTAL_ALIGNMENT_CENTER, 54, 30, 4, Color.BLACK)
+	draw_string(font, centro + Vector2(-27, 11), letra, HORIZONTAL_ALIGNMENT_CENTER, 54, 30, Color.WHITE)
+
+func dibujar_ui_barra(centro: Vector2, font: Font) -> void:
+	# 2. HIT AREA - BAR
+	var titulo: String = "HIT AREA - BAR (A / D o Flechas)"
+	draw_string_outline(font, centro + Vector2(-220, -45), titulo, HORIZONTAL_ALIGNMENT_CENTER, 440, 22, 5, Color.BLACK)
+	draw_string(font, centro + Vector2(-220, -45), titulo, HORIZONTAL_ALIGNMENT_CENTER, 440, 22, Color.WHITE)
+
+	var ancho_total: float = 340.0
+	var alto_barra: float = 34.0
+	var inicio_x: float = centro.x - ancho_total * 0.5
+
+	var rect_barra: Rect2 = Rect2(Vector2(inicio_x, centro.y - alto_barra * 0.5), Vector2(ancho_total, alto_barra))
+	draw_rect(rect_barra, Color(0.55, 0.55, 0.55), true)
+	draw_rect(rect_barra, Color(0.15, 0.15, 0.15), false, 3.0)
+
+	var zona_inicio: float = inicio_x + (barra_zona_pos - barra_zona_ancho * 0.5) * ancho_total
+	var zona_ancho_px: float = barra_zona_ancho * ancho_total
+	var rect_naranja: Rect2 = Rect2(Vector2(zona_inicio, centro.y - alto_barra * 0.5 + 3.0), Vector2(zona_ancho_px, alto_barra - 6.0))
+	draw_rect(rect_naranja, Color(1.0, 0.45, 0.0), true)
+
+	var pos_bolita: Vector2 = Vector2(inicio_x + barra_jugador_pos * ancho_total, centro.y)
+	draw_circle(pos_bolita, 15.0, Color.WHITE)
+	draw_arc(pos_bolita, 15.0, 0.0, TAU, 32, Color.BLACK, 2.5, true)
+
+	var rect_prog_bg: Rect2 = Rect2(Vector2(inicio_x, centro.y + 28), Vector2(ancho_total, 10))
+	draw_rect(rect_prog_bg, Color(0.2, 0.2, 0.2, 0.85), true)
+	draw_rect(Rect2(Vector2(inicio_x, centro.y + 28), Vector2(ancho_total * clampf(progreso_exito, 0.0, 1.0), 10)), Color(0.2, 0.95, 0.2), true)
+
+func dibujar_ui_circulo(centro: Vector2, font: Font) -> void:
+	# 3. HIT AREA - CIRCLE
+	var titulo: String = "HIT AREA - CIRCLE (Espacio o A / D)"
+	draw_string_outline(font, centro + Vector2(-220, -85), titulo, HORIZONTAL_ALIGNMENT_CENTER, 440, 22, 5, Color.BLACK)
+	draw_string(font, centro + Vector2(-220, -85), titulo, HORIZONTAL_ALIGNMENT_CENTER, 440, 22, Color.WHITE)
+
+	var radio: float = 56.0
+	draw_arc(centro, radio, 0.0, TAU, 64, Color(0.86, 0.86, 0.86), 14.0, true)
+
+	draw_arc(
+		centro,
+		radio,
+		circulo_zona_ang - circulo_zona_ancho * 0.5,
+		circulo_zona_ang + circulo_zona_ancho * 0.5,
+		32,
+		Color(1.0, 0.48, 0.05),
+		14.0,
+		true
+	)
+
+	var pos_marcador: Vector2 = centro + Vector2(cos(circulo_jugador_ang), sin(circulo_jugador_ang)) * radio
+	draw_circle(pos_marcador, 10.0, Color.WHITE)
+	draw_arc(pos_marcador, 10.0, 0.0, TAU, 24, Color.BLACK, 2.5, true)
+
+	var pct: String = "%d%%" % int(clampf(progreso_exito, 0.0, 1.0) * 100.0)
+	draw_string_outline(font, centro + Vector2(-40, 8), pct, HORIZONTAL_ALIGNMENT_CENTER, 80, 22, 4, Color.BLACK)
+	draw_string(font, centro + Vector2(-40, 8), pct, HORIZONTAL_ALIGNMENT_CENTER, 80, 22, Color.WHITE)
+
+func dibujar_ui_boton_espacio(centro: Vector2, font: Font) -> void:
+	# 4. SMASH BUTTON / Space
+	var titulo: String = "SMASH BUTTON (Mantén Espacio)"
+	draw_string_outline(font, centro + Vector2(-200, -85), titulo, HORIZONTAL_ALIGNMENT_CENTER, 400, 22, 5, Color.BLACK)
+	draw_string(font, centro + Vector2(-200, -85), titulo, HORIZONTAL_ALIGNMENT_CENTER, 400, 22, Color.WHITE)
+
+	var tam: Vector2 = Vector2(104, 104)
+	var rect_ext: Rect2 = Rect2(centro - tam * 0.5, tam)
+
+	draw_rect(rect_ext, Color(0.55, 0.55, 0.55), true)
+
+	var ratio: float = clampf(progreso_exito, 0.0, 1.0)
+	var alto_verde: float = tam.y * ratio
+	var rect_verde: Rect2 = Rect2(Vector2(rect_ext.position.x, rect_ext.position.y + tam.y - alto_verde), Vector2(tam.x, alto_verde))
+	draw_rect(rect_verde, Color(0.22, 0.98, 0.12), true)
+
+	var margen: float = 10.0
+	var escala_presion: float = 0.94 if espacio_presionado else 1.0
+	var tam_int: Vector2 = (tam - Vector2(margen * 2.0, margen * 2.0)) * escala_presion
+	var rect_int: Rect2 = Rect2(centro - tam_int * 0.5, tam_int)
+	draw_rect(rect_int, Color(0.42, 0.42, 0.42), true)
+	draw_rect(rect_int, Color.BLACK, false, 3.0)
+
+	draw_string_outline(font, centro + Vector2(-45, 8), "Space", HORIZONTAL_ALIGNMENT_CENTER, 90, 24, 4, Color.BLACK)
+	draw_string(font, centro + Vector2(-45, 8), "Space", HORIZONTAL_ALIGNMENT_CENTER, 90, 24, Color.WHITE)

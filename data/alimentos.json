@@ -1,0 +1,104 @@
+{
+  "alimentos": [
+    {
+      "id": "avena_frutas",
+      "categoria": "breakfast",
+      "nombre": "Oatmeal with Freeze-Dried Strawberries & Milk",
+      "tipo": "Rehydratable",
+      "descripcion": "Standard NASA flight ration. Requires injection of 150 ml hot water at 75 °C.",
+      "animo_base": 4,
+      "imagen": "res://comida/avena.png"
+    },
+    {
+      "id": "huevos_revueltos",
+      "categoria": "breakfast",
+      "nombre": "Scrambled Eggs & Space Omelet",
+      "tipo": "Freeze-Dried",
+      "descripcion": "High-protein NASA breakfast ration. Rehydrates quickly with hot water in flight pouch.",
+      "animo_base": 4,
+      "imagen": "res://comida/eggs.png"
+    },
+    {
+      "id": "tortilla_frijoles",
+      "categoria": "breakfast",
+      "nombre": "Crumb-Free Space Bean & Rice Burrito",
+      "tipo": "Thermostabilized",
+      "descripcion": "Special shelf-stable flour tortilla that produces zero crumbs in microgravity, with seasoned beans and rice.",
+      "animo_base": 4,
+      "imagen": "res://comida/arroz con frijoles.png"
+    },
+    {
+      "id": "frutos_secos_snack",
+      "categoria": "breakfast",
+      "nombre": "Roasted Nut & Seed Trail Mix",
+      "tipo": "Extended Shelf-Life",
+      "descripcion": "Dehydrated almonds and walnuts providing crunchy texture, healthy lipids, and jaw stress relief.",
+      "animo_base": 3,
+      "imagen": "res://comida/fruto seco.png"
+    },
+    {
+      "id": "arroz_con_pollo",
+      "categoria": "lunch",
+      "nombre": "Chicken with Rice & Freeze-Dried Vegetables",
+      "tipo": "Rehydratable",
+      "descripcion": "Balanced main entree rich in lean protein, complex carbohydrates, and essential electrolytes.",
+      "animo_base": 5,
+      "imagen": "res://comida/arroz con pollo.png"
+    },
+    {
+      "id": "ensalada_hidroponica",
+      "categoria": "lunch",
+      "nombre": "Fresh Hydroponic Salad (Veggie / APH)",
+      "tipo": "Fresh Local Harvest",
+      "descripcion": "Crisp leafy greens harvested directly from on-site hydroponic chambers. Tremendous positive psychological impact.",
+      "animo_base": 6,
+      "requiere_mejora": "alimentos",
+      "imagen": "res://comida/salad.png"
+    },
+    {
+      "id": "salmon_curry",
+      "categoria": "lunch",
+      "nombre": "Curry Salmon with Spiced Rice",
+      "tipo": "Thermostabilized",
+      "descripcion": "Developed in collaboration with the CSA. Rich in Omega-3 fatty acids and bold spices to counteract microgravity taste dulling.",
+      "animo_base": 5,
+      "imagen": "res://comida/rice.png"
+    },
+    {
+      "id": "sopa_tomate",
+      "categoria": "dinner",
+      "nombre": "Space Tomato & Garden Vegetable Soup",
+      "tipo": "Rehydratable",
+      "descripcion": "Delivers antioxidants and lycopene in a warm broth; deeply comforting after strenuous EVA operations.",
+      "animo_base": 3,
+      "imagen": "res://comida/soup.png"
+    },
+    {
+      "id": "pasta_pouch",
+      "categoria": "dinner",
+      "nombre": "Vegetable & Basil Pasta in Pouch",
+      "tipo": "Thermostabilized",
+      "descripcion": "Easily digestible comfort dinner designed for evening habitat downtime in pressurized quarters.",
+      "animo_base": 4,
+      "imagen": "res://comida/pasta.png"
+    },
+    {
+      "id": "ravioli_carne",
+      "categoria": "dinner",
+      "nombre": "Space Beef Ravioli in Thick Sauce",
+      "tipo": "Thermostabilized",
+      "descripcion": "Popular ISS comfort entree. Stuffed pasta sealed in a viscous sauce to eliminate droplet flotation risks.",
+      "animo_base": 5,
+      "imagen": "res://comida/ravioli.png"
+    },
+    {
+      "id": "pavo_ahumado",
+      "categoria": "dinner",
+      "nombre": "Smoked Turkey with Mashed Potatoes & Gravy",
+      "tipo": "Irradiated",
+      "descripcion": "Preserved by ionizing radiation for multi-year stability. High in tryptophan to facilitate restorative sleep cycles.",
+      "animo_base": 5,
+      "imagen": "res://comida/pavo.png"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3 uid="uid://didabi83gmh8"]
+
+[ext_resource type="Script" path="res://scenes/launch/launch.gd" id="1_dg7i4"]
+[ext_resource type="Texture2D" path="res://art/fondo de inicio nasa.png" id="2_fondo"]
+[ext_resource type="SpriteFrames" path="res://scenes/intro/nave_frames.tres" id="3_frames"]
+
+[node name="Launch" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dg7i4")
+
+[node name="Fondo" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_fondo")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ContenedorNave" type="Node2D" parent="."]
+
+[node name="NaveAnimada" type="AnimatedSprite2D" parent="ContenedorNave"]
+position = Vector2(576, 324)
+scale = Vector2(1.8, 1.8)
+sprite_frames = ExtResource("3_frames")

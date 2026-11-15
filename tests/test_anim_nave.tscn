@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dw6cwftmehedy"]
+
+[ext_resource type="Script" path="res://tests/test_anim_nave.gd" id="1_test"]
+
+[node name="TestAnimNave" type="Node"]
+script = ExtResource("1_test")

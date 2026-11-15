@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://db68qbx4glf3e"]
+
+[ext_resource type="Script" uid="uid://t8r1sp64qhnw" path="res://scenes/base/hud.gd" id="1_0fwnm"]
+
+[node name="HUD" type="CanvasLayer" unique_id=1745824556]
+layer = 40
+script = ExtResource("1_0fwnm")
+
+[node name="Barras" type="VBoxContainer" parent="." unique_id=1925724627]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="BarraEnergia" type="ProgressBar" parent="Barras" unique_id=1482272920]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="BarraAire" type="ProgressBar" parent="Barras" unique_id=2069400717]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="BarraAgua" type="ProgressBar" parent="Barras" unique_id=71837590]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="BarraAlimentos" type="ProgressBar" parent="Barras" unique_id=1755558398]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="BarraProteccion" type="ProgressBar" parent="Barras" unique_id=326738646]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+value = 100.0
+show_percentage = false

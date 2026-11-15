@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dqp6atobse7r3"]
+
+[ext_resource type="Script" uid="uid://dyyybh1peqge3" path="res://tests/h3_test.gd" id="1_5lehj"]
+
+[node name="H3Test" type="Node" unique_id=424137319]
+script = ExtResource("1_5lehj")
