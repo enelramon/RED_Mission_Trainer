@@ -22,12 +22,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      # El runner de GitHub (ubuntu-latest) ya trae el Android SDK preinstalado
+      # en $ANDROID_SDK_ROOT. Usamos ese SDK directamente en lugar de
+      # android-actions/setup-android, que falla al aceptar licencias.
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android build-tools and platform-tools
         run: |
-          sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          # Aceptar licencias (yes alimenta todos los prompts; no abortar si ya estaban aceptadas)
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          # Asegurar los componentes que Godot necesita para firmar/empaquetar el APK
+          "$SDKMANAGER" "platform-tools" "build-tools;34.0.0" "platforms;android-34"
 
       - name: Install Godot 4.6
         run: |
@@ -65,8 +70,6 @@ jobs:
         run: mkdir -p export
 
       - name: Build APK
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
         run: |
           # --export-release "Android" fuerza a Godot a usar el preset de Android
           ./godot.exec --headless --path . --export-release "Android" export/RED_Mission_Trainer.apk
