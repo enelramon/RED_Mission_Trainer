@@ -52,26 +52,6 @@ jobs:
             -storepass android -dname "CN=Android Debug,O=Android,C=US" \
             -validity 9999 -deststoretype pkcs12
 
-      # Configuramos la ruta del Android SDK y el keystore de DEBUG en los Editor
-      # Settings de Godot. Al exportar con --export-release sin keystore de release,
-      # Godot firma el APK con el keystore de debug, suficiente para instalar y probar.
-      # NOTA: no definimos las variables GODOT_ANDROID_KEYSTORE_RELEASE_* a proposito;
-      # setearlas activa una validacion estricta del keystore de release que hace
-      # fallar el export ("Release keystore incorrectly configured").
-      - name: Configure Godot editor settings (Android SDK + keystore)
-        run: |
-          mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.tres <<EOF
-          [gd_resource type="EditorSettings" format=3]
-
-          [resource]
-          export/android/android_sdk_path = "$ANDROID_HOME"
-          export/android/java_sdk_path = "$JAVA_HOME"
-          export/android/debug_keystore = "$HOME/.android/debug.keystore"
-          export/android/debug_keystore_user = "androiddebugkey"
-          export/android/debug_keystore_pass = "android"
-          EOF
-
       - name: Create Export Directory
         run: mkdir -p export
 
@@ -83,6 +63,32 @@ jobs:
       - name: Import Project Resources
         run: |
           ./godot.exec --headless --path . --import || true
+
+      # IMPORTANTE: este paso va DESPUES del import. El import (modo editor) crea
+      # su propio editor_settings-4.6.tres con valores por defecto; si escribieramos
+      # la config antes, el import la sobrescribiria y el export no veria el SDK ni
+      # el keystore (fallando con "configuration errors" sin detalle).
+      #
+      # El nombre del archivo debe coincidir con la version MINOR de Godot
+      # (editor_settings-4.6.tres, no -4.tres), que es el que Godot 4.6 lee.
+      #
+      # Se configura solo el keystore de DEBUG: al exportar con --export-release sin
+      # keystore de release, Godot firma el APK con el de debug (suficiente para
+      # instalar y probar). NO definimos GODOT_ANDROID_KEYSTORE_RELEASE_*: setearlas
+      # activa una validacion estricta que hace fallar el export.
+      - name: Configure Godot editor settings (Android SDK + keystore)
+        run: |
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.6.tres <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
 
       - name: Build APK
         run: |
