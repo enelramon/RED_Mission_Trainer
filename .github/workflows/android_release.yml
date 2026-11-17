@@ -87,14 +87,26 @@ jobs:
       - name: Build APK
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          # Firmamos el release con el keystore de debug generado antes. Sin estas
+          # variables, --export-release produce un APK SIN firmar (apksigner:
+          # "Missing META-INF/MANIFEST.MF") que no se puede instalar.
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: android
         run: |
+          # $HOME es la variable del runner (la de las expresiones ${{ env.HOME }}
+          # no existe), por eso construimos la ruta aqui en el shell.
+          export GODOT_ANDROID_KEYSTORE_RELEASE_PATH="$HOME/.local/share/godot/keystores/debug.keystore"
           # --export-release "Android" fuerza a Godot a usar el preset de Android.
-          # Sin keystore de release configurado, Godot firma con el de debug.
+          # El preset exige compresion de texturas ETC2/ASTC (habilitada en
+          # project.godot con rendering/textures/vram_compression/import_etc2_astc);
+          # sin ella Godot marca "configuration errors" SIN detalle en headless.
           ./godot.exec --headless --path . --export-release "Android" export/RED_Mission_Trainer.apk
 
-      - name: Verify APK exists
+      - name: Verify APK exists and is signed
         run: |
           ls -lh export/RED_Mission_Trainer.apk
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n1)
+          "$APKSIGNER" verify --verbose export/RED_Mission_Trainer.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
