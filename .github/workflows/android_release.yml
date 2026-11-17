@@ -44,55 +44,52 @@ jobs:
           unzip Godot_v4.6-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/4.6.stable
           mv ~/.local/share/godot/export_templates/4.6.stable/templates/* ~/.local/share/godot/export_templates/4.6.stable/
 
-      - name: Generate Android debug keystore
+      # Godot 4.6 busca por defecto el keystore de debug en
+      # ~/.local/share/godot/keystores/debug.keystore, con usuario
+      # "androiddebugkey" y password "android". Lo generamos en esa misma ruta
+      # para no depender de editar los editor settings a mano (un .tres escrito
+      # manualmente puede no cargar y provoca "configuration errors" sin detalle).
+      - name: Generate Android debug keystore (ruta por defecto de Godot)
         run: |
-          mkdir -p ~/.android
+          KS_DIR="$HOME/.local/share/godot/keystores"
+          mkdir -p "$KS_DIR"
           keytool -keyalg RSA -genkeypair -alias androiddebugkey \
-            -keypass android -keystore ~/.android/debug.keystore \
+            -keypass android -keystore "$KS_DIR/debug.keystore" \
             -storepass android -dname "CN=Android Debug,O=Android,C=US" \
             -validity 9999 -deststoretype pkcs12
 
       - name: Create Export Directory
         run: mkdir -p export
 
-      # Importamos los recursos en un proceso aparte ANTES de exportar.
-      # Si se importa y exporta en la misma invocacion, el estado del sistema de
-      # archivos no esta listo y el export falla con "configuration errors".
-      # El import puede devolver codigo != 0 por no poder guardar editor settings
-      # en el runner; eso es inofensivo, por eso usamos "|| true".
+      # Importamos los recursos en un proceso aparte ANTES de exportar. Esto:
+      #  - evita que el export tenga que reimportar (errores "Unable to open .ctex"),
+      #  - hace que Godot autodetecte y PERSISTA en editor_settings-4.6.tres las
+      #    rutas del SDK ($ANDROID_HOME) y del JDK ($JAVA_HOME), ademas del
+      #    keystore de debug por defecto generado en el paso anterior.
+      # El import puede devolver codigo != 0 al no poder guardar algunos ajustes
+      # en el runner; es inofensivo, por eso "|| true".
       - name: Import Project Resources
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
         run: |
           ./godot.exec --headless --path . --import || true
 
-      # IMPORTANTE: este paso va DESPUES del import. El import (modo editor) crea
-      # su propio editor_settings-4.6.tres con valores por defecto; si escribieramos
-      # la config antes, el import la sobrescribiria y el export no veria el SDK ni
-      # el keystore (fallando con "configuration errors" sin detalle).
-      #
-      # El nombre del archivo debe coincidir con la version MINOR de Godot
-      # (editor_settings-4.6.tres, no -4.tres), que es el que Godot 4.6 lee.
-      #
-      # Se configura solo el keystore de DEBUG: al exportar con --export-release sin
-      # keystore de release, Godot firma el APK con el de debug (suficiente para
-      # instalar y probar). NO definimos GODOT_ANDROID_KEYSTORE_RELEASE_*: setearlas
-      # activa una validacion estricta que hace fallar el export.
-      - name: Configure Godot editor settings (Android SDK + keystore)
+      # Diagnostico: dejar constancia de la config que Godot autodetecto, util si
+      # el export vuelve a fallar.
+      - name: Show detected editor settings
         run: |
-          mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.6.tres <<EOF
-          [gd_resource type="EditorSettings" format=3]
-
-          [resource]
-          export/android/android_sdk_path = "$ANDROID_HOME"
-          export/android/java_sdk_path = "$JAVA_HOME"
-          export/android/debug_keystore = "$HOME/.android/debug.keystore"
-          export/android/debug_keystore_user = "androiddebugkey"
-          export/android/debug_keystore_pass = "android"
-          EOF
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "JAVA_HOME=$JAVA_HOME"
+          echo "--- editor_settings-4.6.tres (claves android/java) ---"
+          grep -iE "android_sdk_path|java_sdk_path|debug_keystore" \
+            ~/.config/godot/editor_settings-4.6.tres || echo "(sin claves android/java)"
 
       - name: Build APK
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
         run: |
-          # --export-release "Android" fuerza a Godot a usar el preset de Android
+          # --export-release "Android" fuerza a Godot a usar el preset de Android.
+          # Sin keystore de release configurado, Godot firma con el de debug.
           ./godot.exec --headless --path . --export-release "Android" export/RED_Mission_Trainer.apk
 
       - name: Verify APK exists
