@@ -52,6 +52,12 @@ jobs:
             -storepass android -dname "CN=Android Debug,O=Android,C=US" \
             -validity 9999 -deststoretype pkcs12
 
+      # Configuramos la ruta del Android SDK y el keystore de DEBUG en los Editor
+      # Settings de Godot. Al exportar con --export-release sin keystore de release,
+      # Godot firma el APK con el keystore de debug, suficiente para instalar y probar.
+      # NOTA: no definimos las variables GODOT_ANDROID_KEYSTORE_RELEASE_* a proposito;
+      # setearlas activa una validacion estricta del keystore de release que hace
+      # fallar el export ("Release keystore incorrectly configured").
       - name: Configure Godot editor settings (Android SDK + keystore)
         run: |
           mkdir -p ~/.config/godot
@@ -60,19 +66,32 @@ jobs:
 
           [resource]
           export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
           export/android/debug_keystore = "$HOME/.android/debug.keystore"
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
           EOF
 
-      # Creamos la carpeta de salida que espera export_presets.cfg
       - name: Create Export Directory
         run: mkdir -p export
+
+      # Importamos los recursos en un proceso aparte ANTES de exportar.
+      # Si se importa y exporta en la misma invocacion, el estado del sistema de
+      # archivos no esta listo y el export falla con "configuration errors".
+      # El import puede devolver codigo != 0 por no poder guardar editor settings
+      # en el runner; eso es inofensivo, por eso usamos "|| true".
+      - name: Import Project Resources
+        run: |
+          ./godot.exec --headless --path . --import || true
 
       - name: Build APK
         run: |
           # --export-release "Android" fuerza a Godot a usar el preset de Android
           ./godot.exec --headless --path . --export-release "Android" export/RED_Mission_Trainer.apk
+
+      - name: Verify APK exists
+        run: |
+          ls -lh export/RED_Mission_Trainer.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
